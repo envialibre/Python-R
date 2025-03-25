@@ -82,11 +82,11 @@ def send_order_for_symbols(signal, entry, sl, tp, tf=None, symbol=None):
     initial_capital = get_initial_capital()
     equity_threshold = initial_capital * 0.4
 
-    if equity <= equity_threshold:
-        mt5.shutdown()
-        msg = f"🛑 Equity actual (${equity:.2f}) ha bajado más del 60% del capital inicial (${initial_capital:.2f}). No se abrirán más operaciones."
-        print(msg)
-        return [msg]
+    # if equity <= equity_threshold:
+    #     mt5.shutdown()
+    #     msg = f"🛑 Equity actual (${equity:.2f}) ha bajado más del 60% del capital inicial (${initial_capital:.2f}). No se abrirán más operaciones."
+    #     print(msg)
+    #     return [msg]
 
     positions = mt5.positions_get()
     current_open_lots = sum(pos.volume for pos in positions if pos.volume == default_lot) if positions else 0

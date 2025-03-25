@@ -14,9 +14,9 @@ valid_symbols = {
 @app.route('/webhook', methods=['POST'])
 def webhook():
     # Validar que la solicitud venga desde TradingView
-    user_agent = request.headers.get("User-Agent", "").lower()
-    if "tradingview" not in user_agent:
-        return jsonify({'error': '❌ Acceso denegado. Solo se aceptan alertas desde TradingView.'}), 403
+    # user_agent = request.headers.get("User-Agent", "").lower()
+    # if "tradingview" not in user_agent:
+    #     return jsonify({'error': '❌ Acceso denegado. Solo se aceptan alertas desde TradingView.'}), 403
 
     data = request.json
     if not data:
