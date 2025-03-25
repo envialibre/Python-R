@@ -1,0 +1,966 @@
+{
+  "service": {
+    "service": "serverless-app",
+    "serviceObject": {
+      "name": "serverless-app"
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs20.x",
+      "region": "us-east-1",
+      "environment": {
+        "RDS_HOST": "database-1.cd9dppzsuu7t.us-east-1.rds.amazonaws.com",
+        "RDS_USER": "webmaster",
+        "RDS_PASSWORD": "Cammx1000f!",
+        "RDS_DATABASE": "mydatabase"
+      },
+      "stage": "dev",
+      "versionFunctions": true,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      },
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "GetClientsLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/serverless-app-dev-getClients"
+            }
+          },
+          "GetRequestsLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/serverless-app-dev-getRequests"
+            }
+          },
+          "IncrementRequestsLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/serverless-app-dev-incrementRequests"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "serverless-app",
+                        "dev",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream",
+                          "logs:CreateLogGroup",
+                          "logs:TagResource"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/serverless-app-dev*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/serverless-app-dev*:*:*"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "serverless-app",
+                    "dev",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "GetClientsLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/serverless-app/dev/1717643732745-2024-06-06T03:15:32.745Z/serverless-app.zip"
+              },
+              "Handler": "src/handler.getClients",
+              "Runtime": "nodejs20.x",
+              "FunctionName": "serverless-app-dev-getClients",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "RDS_HOST": "database-1.cd9dppzsuu7t.us-east-1.rds.amazonaws.com",
+                  "RDS_USER": "webmaster",
+                  "RDS_PASSWORD": "Cammx1000f!",
+                  "RDS_DATABASE": "mydatabase"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetClientsLogGroup"
+            ]
+          },
+          "GetRequestsLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/serverless-app/dev/1717643732745-2024-06-06T03:15:32.745Z/serverless-app.zip"
+              },
+              "Handler": "src/handler.getRequests",
+              "Runtime": "nodejs20.x",
+              "FunctionName": "serverless-app-dev-getRequests",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "RDS_HOST": "database-1.cd9dppzsuu7t.us-east-1.rds.amazonaws.com",
+                  "RDS_USER": "webmaster",
+                  "RDS_PASSWORD": "Cammx1000f!",
+                  "RDS_DATABASE": "mydatabase"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetRequestsLogGroup"
+            ]
+          },
+          "IncrementRequestsLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/serverless-app/dev/1717643732745-2024-06-06T03:15:32.745Z/serverless-app.zip"
+              },
+              "Handler": "src/handler.incrementRequests",
+              "Runtime": "nodejs20.x",
+              "FunctionName": "serverless-app-dev-incrementRequests",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "RDS_HOST": "database-1.cd9dppzsuu7t.us-east-1.rds.amazonaws.com",
+                  "RDS_USER": "webmaster",
+                  "RDS_PASSWORD": "Cammx1000f!",
+                  "RDS_DATABASE": "mydatabase"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "IncrementRequestsLogGroup"
+            ]
+          },
+          "GetClientsLambdaVersionihBvGTi9NUnYUgHQJJNPH8l2MB3u5QjMGWaViHJ2zA": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetClientsLambdaFunction"
+              },
+              "CodeSha256": "cS+LrLvpyg7kd73mCG2BoWxpSHC9yrTuWHChNXEz1JU="
+            }
+          },
+          "GetRequestsLambdaVersionZm7wyCOP1mgdT4SgH6ZBWzcweTUJ3XoSj784LbRUACo": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetRequestsLambdaFunction"
+              },
+              "CodeSha256": "cS+LrLvpyg7kd73mCG2BoWxpSHC9yrTuWHChNXEz1JU="
+            }
+          },
+          "IncrementRequestsLambdaVersionp5I52MtDUeHcseQOW8wBUJDbY6kvVioMZiL2u6GavY": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "IncrementRequestsLambdaFunction"
+              },
+              "CodeSha256": "cS+LrLvpyg7kd73mCG2BoWxpSHC9yrTuWHChNXEz1JU="
+            }
+          },
+          "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+              "Name": "dev-serverless-app",
+              "EndpointConfiguration": {
+                "Types": [
+                  "EDGE"
+                ]
+              },
+              "Policy": ""
+            }
+          },
+          "ApiGatewayResourceClients": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "clients",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayResourceRequests": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "requests",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayResourceRequestsClientidVar": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Ref": "ApiGatewayResourceRequests"
+              },
+              "PathPart": "{client_id}",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodClientsGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceClients"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "GetClientsLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "GetClientsLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayMethodRequestsClientidVarGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceRequestsClientidVar"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "GetRequestsLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "GetRequestsLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayMethodRequestsClientidVarPost": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "POST",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceRequestsClientidVar"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "IncrementRequestsLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            },
+            "DependsOn": [
+              "IncrementRequestsLambdaPermissionApiGateway"
+            ]
+          },
+          "ApiGatewayDeployment1717643628914": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "StageName": "dev"
+            },
+            "DependsOn": [
+              "ApiGatewayMethodClientsGet",
+              "ApiGatewayMethodRequestsClientidVarGet",
+              "ApiGatewayMethodRequestsClientidVarPost"
+            ]
+          },
+          "GetClientsLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetClientsLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "GetRequestsLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetRequestsLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "IncrementRequestsLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "IncrementRequestsLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "MyRDSInstance": {
+            "Type": "AWS::RDS::DBInstance",
+            "Properties": {
+              "DBInstanceClass": "db.m6gd.large",
+              "AllocatedStorage": 20,
+              "DBName": "mydatabase",
+              "Engine": "MySQL",
+              "MasterUsername": "webmaster",
+              "MasterUserPassword": "Cammx1000f!",
+              "PubliclyAccessible": true,
+              "VPCSecurityGroups": [
+                {
+                  "Fn::GetAtt": [
+                    "RdsSecurityGroup",
+                    "GroupId"
+                  ]
+                }
+              ]
+            }
+          },
+          "RdsSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+              "GroupDescription": "Enable RDS access",
+              "VpcId": "vpc-02db8875a69f34909",
+              "SecurityGroupIngress": [
+                {
+                  "IpProtocol": "tcp",
+                  "FromPort": 3306,
+                  "ToPort": 3306,
+                  "CidrIp": "0.0.0.0/0"
+                }
+              ]
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            },
+            "Export": {
+              "Name": "sls-serverless-app-dev-ServerlessDeploymentBucketName"
+            }
+          },
+          "GetClientsLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetClientsLambdaVersionihBvGTi9NUnYUgHQJJNPH8l2MB3u5QjMGWaViHJ2zA"
+            },
+            "Export": {
+              "Name": "sls-serverless-app-dev-GetClientsLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetRequestsLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetRequestsLambdaVersionZm7wyCOP1mgdT4SgH6ZBWzcweTUJ3XoSj784LbRUACo"
+            },
+            "Export": {
+              "Name": "sls-serverless-app-dev-GetRequestsLambdaFunctionQualifiedArn"
+            }
+          },
+          "IncrementRequestsLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "IncrementRequestsLambdaVersionp5I52MtDUeHcseQOW8wBUJDbY6kvVioMZiL2u6GavY"
+            },
+            "Export": {
+              "Name": "sls-serverless-app-dev-IncrementRequestsLambdaFunctionQualifiedArn"
+            }
+          },
+          "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  ".execute-api.",
+                  {
+                    "Ref": "AWS::Region"
+                  },
+                  ".",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  },
+                  "/dev"
+                ]
+              ]
+            },
+            "Export": {
+              "Name": "sls-serverless-app-dev-ServiceEndpoint"
+            }
+          }
+        }
+      },
+      "coreCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ServerlessDeploymentBucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "ServerlessDeploymentBucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Resource": [
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            },
+                            "/*"
+                          ]
+                        ]
+                      },
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            "arn:",
+                            {
+                              "Ref": "AWS::Partition"
+                            },
+                            ":s3:::",
+                            {
+                              "Ref": "ServerlessDeploymentBucket"
+                            }
+                          ]
+                        ]
+                      }
+                    ],
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": false
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "plugins": [
+      "serverless-plugin-typescript",
+      "serverless-dotenv-plugin"
+    ],
+    "pluginsData": {},
+    "functions": {
+      "getClients": {
+        "handler": "src/handler.getClients",
+        "events": [
+          {
+            "http": {
+              "path": "clients",
+              "method": "get",
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "name": "serverless-app-dev-getClients",
+        "package": {
+          "exclude": [
+            "node_modules/serverless-plugin-typescript"
+          ],
+          "include": [],
+          "patterns": []
+        },
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs20.x",
+        "vpc": {},
+        "versionLogicalId": "GetClientsLambdaVersionihBvGTi9NUnYUgHQJJNPH8l2MB3u5QjMGWaViHJ2zA"
+      },
+      "getRequests": {
+        "handler": "src/handler.getRequests",
+        "events": [
+          {
+            "http": {
+              "path": "requests/{client_id}",
+              "method": "get",
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "name": "serverless-app-dev-getRequests",
+        "package": {
+          "exclude": [
+            "node_modules/serverless-plugin-typescript"
+          ],
+          "include": [],
+          "patterns": []
+        },
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs20.x",
+        "vpc": {},
+        "versionLogicalId": "GetRequestsLambdaVersionZm7wyCOP1mgdT4SgH6ZBWzcweTUJ3XoSj784LbRUACo"
+      },
+      "incrementRequests": {
+        "handler": "src/handler.incrementRequests",
+        "events": [
+          {
+            "http": {
+              "path": "requests/{client_id}",
+              "method": "post",
+              "integration": "AWS_PROXY"
+            }
+          }
+        ],
+        "name": "serverless-app-dev-incrementRequests",
+        "package": {
+          "exclude": [
+            "node_modules/serverless-plugin-typescript"
+          ],
+          "include": [],
+          "patterns": []
+        },
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs20.x",
+        "vpc": {},
+        "versionLogicalId": "IncrementRequestsLambdaVersionp5I52MtDUeHcseQOW8wBUJDbY6kvVioMZiL2u6GavY"
+      }
+    },
+    "resources": {
+      "Resources": {
+        "MyRDSInstance": {
+          "Type": "AWS::RDS::DBInstance",
+          "Properties": {
+            "DBInstanceClass": "db.m6gd.large",
+            "AllocatedStorage": 20,
+            "DBName": "mydatabase",
+            "Engine": "MySQL",
+            "MasterUsername": "webmaster",
+            "MasterUserPassword": "Cammx1000f!",
+            "PubliclyAccessible": true,
+            "VPCSecurityGroups": [
+              {
+                "Fn::GetAtt": [
+                  "RdsSecurityGroup",
+                  "GroupId"
+                ]
+              }
+            ]
+          }
+        },
+        "RdsSecurityGroup": {
+          "Type": "AWS::EC2::SecurityGroup",
+          "Properties": {
+            "GroupDescription": "Enable RDS access",
+            "VpcId": "vpc-02db8875a69f34909",
+            "SecurityGroupIngress": [
+              {
+                "IpProtocol": "tcp",
+                "FromPort": 3306,
+                "ToPort": 3306,
+                "CidrIp": "0.0.0.0/0"
+              }
+            ]
+          }
+        }
+      },
+      "Outputs": {}
+    },
+    "configValidationMode": "warn",
+    "serviceFilename": "serverless.yml",
+    "initialServerlessConfig": {
+      "service": "serverless-app",
+      "frameworkVersion": "3",
+      "plugins": {
+        "$ref": "$[\"service\"][\"plugins\"]"
+      },
+      "provider": {
+        "$ref": "$[\"service\"][\"provider\"]"
+      },
+      "functions": {
+        "$ref": "$[\"service\"][\"functions\"]"
+      },
+      "resources": {
+        "$ref": "$[\"service\"][\"resources\"]"
+      }
+    },
+    "layers": {},
+    "isDashboardMonitoringPreconfigured": false,
+    "artifact": "C:\\Users\\envia\\Desktop\\UNI IBERO\\InteligenciaArtificial\\projecto1\\python\\.build\\.serverless\\serverless-app.zip"
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/serverless-app/dev/1717643732745-2024-06-06T03:15:32.745Z",
+    "artifact": "serverless-app.zip"
+  }
+}

@@ -1,0 +1,62 @@
+service: serverless-app
+
+frameworkVersion: '3'
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-dotenv-plugin
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  environment:
+    RDS_HOST: ${env:RDS_HOST}
+    RDS_USER: ${env:RDS_USER}
+    RDS_PASSWORD: ${env:RDS_PASSWORD}
+    RDS_DATABASE: ${env:RDS_DATABASE}
+
+functions:
+  getClients:
+    handler: src/handler.getClients
+    events:
+      - http:
+          path: clients
+          method: get
+  getRequests:
+    handler: src/handler.getRequests
+    events:
+      - http:
+          path: requests/{client_id}
+          method: get
+  incrementRequests:
+    handler: src/handler.incrementRequests
+    events:
+      - http:
+          path: requests/{client_id}
+          method: post
+
+resources:
+  Resources:
+    MyRDSInstance:
+      Type: AWS::RDS::DBInstance
+      Properties:
+        DBInstanceClass: db.m6gd.large
+        AllocatedStorage: 20
+        DBName: ${env:RDS_DATABASE}
+        Engine: MySQL
+        MasterUsername: ${env:RDS_USER}
+        MasterUserPassword: ${env:RDS_PASSWORD}
+        PubliclyAccessible: true
+        VPCSecurityGroups:
+          - !GetAtt RdsSecurityGroup.GroupId
+    RdsSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Enable RDS access
+        VpcId: vpc-02db8875a69f34909
+        SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 3306
+            ToPort: 3306
+            CidrIp: 0.0.0.0/0
